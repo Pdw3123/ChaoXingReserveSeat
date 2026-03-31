@@ -2,30 +2,32 @@
     "reserve": [
         {"username": "******",
         "password": "*******",
-        "time": ["07:30","22:30"],
-        "roomid":"13472",
-        "seatid":["530"],
+        "time": ["08:30","22:30"],
+        "roomid":"13480",
+        "seatid":["616"],
         "daysofweek": [ "Monday"]
     },
         {"username": "*****",
         "password": "******",
-        "time": ["07:30","22:30"],
-        "roomid":"13472",
-        "seatid":["530"],
+        "time": ["09:30","22:30"],
+        "roomid":"13480",
+        "seatid":["616"],
         "daysofweek": ["Tuesday"]
     },
         {"username": "******",
         "password": "******",
-        "time": ["07:30","22:30"],
-        "roomid":"13472",
-        "seatid":["530"],
-        "daysofweek": ["Wednesday","Thursday","Friday","Saturday"]
-    },
+        "time": ["08:30","22:30"],
+        "roomid":"13480",
+        "seatid":["616"],
+        "daysofweek": ["Wednesday","Thursday"]
+
+            
+    },   
         {"username": "*******",
         "password": "*******",
-        "time": ["07:30","22:30"],
-        "roomid":"13472",
-        "seatid":["530"],
+        "time": ["11:30","22:30"],
+        "roomid":"13480",
+        "seatid":["616"],
         "daysofweek": ["Sunday"]
     }
     ]

@@ -5,7 +5,7 @@
         "time": ["08:30","22:30"],
         "roomid":"13488",
         "seatid":["281"],
-        "daysofweek": [ "Monday"]
+        "daysofweek": [ "Monday","Friday"]
     },
         {"username": "*****",
         "password": "******",
@@ -16,7 +16,7 @@
     },
         {"username": "******",
         "password": "******",
-        "time": ["08:30","22:30"],
+        "time": ["19:00","22:30"],
         "roomid":"13488",
         "seatid":["281"],
         "daysofweek": ["Wednesday","Thursday"]
@@ -25,10 +25,10 @@
     },   
         {"username": "*******",
         "password": "*******",
-        "time": ["11:30","22:30"],
+        "time": ["08:30","22:30"],
         "roomid":"13488",
         "seatid":["281"],
-        "daysofweek": ["Sunday"]
+        "daysofweek": ["Sunday","Saturday"]
     }
     ]
 

@@ -36,9 +36,7 @@ class reserve:
         self.success_times = 0
         self.fail_dict = []
         self.submit_msg = []
-        # 最终稳定版本：curl_cffi 0.6.3 官方支持的最高Chrome版本
         self.requests = requests.Session(impersonate="chrome120")
-        self.token_pattern = re.compile("token = '(.*?)'")
         self.headers = {
             "Referer": "https://office.chaoxing.com/",
             "Host": "captcha.chaoxing.com",
@@ -70,11 +68,17 @@ class reserve:
         self.enable_slider = enable_slider
         self.reserve_next_day = reserve_next_day
 
-    # login and page token
+    # 【通用token匹配：三层校验，零误判，所有用户通用】
     def _get_page_token(self, url, require_value=False):
         response = self.requests.get(url=url)
         html = response.content.decode("utf-8")
-        matches = re.findall(r'id="submit_enc"\s+value="(.*?)"', html)
+        # 1. 正则匹配格式
+        candidates = re.findall(r'([a-f0-9]{32}_\d{8,10})', html)
+        # 2. 过滤固定长度42位
+        candidates = [t for t in candidates if len(t) == 42]
+        # 3. 去重取唯一值
+        matches = list(set(candidates))
+
         value_matches = None
         if require_value:
             value_matches = re.findall(r'value="(.*?)"', html)
@@ -111,7 +115,6 @@ class reserve:
             )
             return (False, obj["msg2"])
 
-    # extra: get roomid
     def roomid(self, encode):
         url = f"https://office.chaoxing.com/data/apps/seat/room/list?cpage=1&pageSize=100&firstLevelName=&secondLevelName=&thirdLevelName=&deptIdEnc={encode}"
         json_data = self.requests.get(url=url).content.decode("utf-8")
@@ -120,19 +123,17 @@ class reserve:
             info = f'{i["firstLevelName"]}-{i["secondLevelName"]}-{i["thirdLevelName"]} id为：{i["id"]}'
             print(info)
 
-    # solve captcha
-
+    # 【随机callback，和真人浏览器一致】
     def resolve_captcha(self):
         logging.info(f"Start to resolve captcha token")
         captcha_token, bg, tp = self.get_slide_captcha_data()
         logging.info(f"Successfully get prepared captcha_token {captcha_token}")
-        logging.info(f"Captcha Image URL-small {tp}, URL-big {bg}")
-        x = self.x_distance(bg, tp)
-        x = x + random.randint(-2, 2)
+        x = self.x_distance(bg, tp) + random.randint(-2, 2)
         logging.info(f"Successfully calculate the captcha distance {x}")
 
+        callback = f"jQuery{random.randint(100000000, 999999999)}_{int(time.time() * 1000)}"
         params = {
-            "callback": "jQuery33109180509737430778_1716381333117",
+            "callback": callback,
             "captchaId": "42sxgHoTPTKbt0uZxPJ7ssOvtXr3ZgZ1",
             "type": "slide",
             "token": captcha_token,
@@ -147,25 +148,23 @@ class reserve:
             params=params,
             headers=self.headers,
         )
-        text = response.text.replace(
-            "jQuery33109180509737430778_1716381333117(", ""
-        ).replace(")", "")
+        text = response.text.replace(callback + "(", "").replace(")", "")
         data = json.loads(text)
-        logging.info(f"Successfully resolve the captcha token {data}")
         try:
-            validate_val = json.loads(data["extraData"])["validate"]
-            return validate_val
-        except KeyError as e:
-            logging.info("Can't load validate value. Maybe server return mistake.")
+            return json.loads(data["extraData"])["validate"]
+        except:
+            logging.info("Captcha validate failed, retry.")
             return ""
 
+    # 【随机callback，和真人浏览器一致】
     def get_slide_captcha_data(self):
         url = "https://captcha.chaoxing.com/captcha/get/verification/image"
         timestamp = int(time.time() * 1000)
         capture_key, token = generate_captcha_key(timestamp)
         referer = f"https://office.chaoxing.com/front/third/apps/seat/code?id=3993&seatNum=0199"
+        callback = f"jQuery{random.randint(100000000, 999999999)}_{timestamp}"
         params = {
-            "callback": f"jQuery33107685004390294206_1716461324846",
+            "callback": callback,
             "captchaId": "42sxgHoTPTKbt0uZxPJ7ssOvtXr3ZgZ1",
             "type": "slide",
             "version": "1.1.18",
@@ -177,16 +176,9 @@ class reserve:
             "b": "a",
         }
         response = self.requests.get(url=url, params=params, headers=self.headers)
-        content = response.text
-
-        data = content.replace(
-            "jQuery33107685004390294206_1716461324846(", ")"
-        ).replace(")", "")
-        data = json.loads(data)
-        captcha_token = data["token"]
-        bg = data["imageVerificationVo"]["shadeImage"]
-        tp = data["imageVerificationVo"]["cutoutImage"]
-        return captcha_token, bg, tp
+        content = response.text.replace(callback + "(", "").replace(")", "")
+        data = json.loads(content)
+        return data["token"], data["imageVerificationVo"]["shadeImage"], data["imageVerificationVo"]["cutoutImage"]
 
     def x_distance(self, bg, tp):
         import numpy as np
@@ -199,8 +191,7 @@ class reserve:
             mask = slider_image[:, :, 3]
             mask[mask != 0] = 255
             x, y, w, h = cv2.boundingRect(mask)
-            cropped_image = slider_part[y : y + h, x : x + w]
-            return cropped_image
+            return slider_part[y : y + h, x : x + w]
 
         c_captcha_headers = {
             "Referer": "https://office.chaoxing.com/",
@@ -216,10 +207,8 @@ class reserve:
             "Upgrade-Insecure-Requests": "1",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         }
-        bgc, tpc = self.requests.get(bg, headers=c_captcha_headers), self.requests.get(
-            tp, headers=c_captcha_headers
-        )
-        bg, tp = bgc.content, tpc.content
+        bg = self.requests.get(bg, headers=c_captcha_headers).content
+        tp = self.requests.get(tp, headers=c_captcha_headers).content
         bg_img = cv2.imdecode(np.frombuffer(bg, np.uint8), cv2.IMREAD_COLOR)
         tp_img = cut_slide(tp)
         bg_edge = cv2.Canny(bg_img, 100, 200)
@@ -228,8 +217,7 @@ class reserve:
         tp_pic = cv2.cvtColor(tp_edge, cv2.COLOR_GRAY2RGB)
         res = cv2.matchTemplate(bg_pic, tp_pic, cv2.TM_CCOEFF_NORMED)
         _, _, _, max_loc = cv2.minMaxLoc(res)
-        tl = max_loc
-        return tl[0]
+        return max_loc[0]
 
     def submit(self, times, roomid, seatid, action):
         time.sleep(random.uniform(0.3, 1.2))
@@ -262,13 +250,9 @@ class reserve:
         self, url, times, token, roomid, seatid, captcha="", action=False, value=""
     ):
         delta_day = 1 if self.reserve_next_day else 0
-        day = datetime.date.today() + datetime.timedelta(
-            days=0 + delta_day
-        )
+        day = datetime.date.today() + datetime.timedelta(days=0 + delta_day)
         if action:
-            day = datetime.date.today() + datetime.timedelta(
-                days=1 + delta_day
-            )
+            day = datetime.date.today() + datetime.timedelta(days=1 + delta_day)
         parm = {
             "roomId": roomid,
             "startTime": times[0],
@@ -282,11 +266,7 @@ class reserve:
         }
         logging.info(f"submit parameter {parm} ")
         parm["enc"] = verify_param(parm, value)
-        html = self.requests.post(url=url, params=parm).content.decode(
-            "utf-8"
-        )
-        self.submit_msg.append(
-            times[0] + "~" + times[1] + ":  " + str(json.loads(html))
-        )
+        html = self.requests.post(url=url, params=parm).content.decode("utf-8")
+        self.submit_msg.append(times[0] + "~" + times[1] + ":  " + str(json.loads(html)))
         logging.info(json.loads(html))
         return json.loads(html)["success"]

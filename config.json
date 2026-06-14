@@ -25,7 +25,7 @@
     },   
         {"username": "*******",
         "password": "*******",
-        "time": ["08:30","22:30"],
+        "time": ["11:30","22:30"],
         "roomid":"13488",
         "seatid":["281"],
         "daysofweek": ["Sunday","Saturday"]

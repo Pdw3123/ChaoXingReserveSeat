@@ -3,26 +3,26 @@
         {
             "username": "******",
             "password": "*******",
-            "time": ["08:30", "22:00"],
+            "time": ["17:00", "22:00"],
             "roomid": "13488",
             "seatid": ["281"],
-            "daysofweek": ["Monday", "Friday"]
+            "daysofweek": ["Sunday", "Monday"]
         },
         {
             "username": "*****",
             "password": "******",
-            "time": ["08:30", "22:00"],
+            "time": ["17:00", "22:00"],
             "roomid": "13488",
             "seatid": ["281"],
-            "daysofweek": ["Tuesday"]
+            "daysofweek": ["Tuesday","Wednesday"]
         },
         {
             "username": "******",
             "password": "******",
-            "time": ["08:30", "22:00"],
+            "time": ["17:00", "22:00"],
             "roomid": "13488",
             "seatid": ["281"],
-            "daysofweek": ["Wednesday", "Thursday"]
+            "daysofweek": ["Thursday"]
         },
         {
             "username": "*******",
@@ -30,7 +30,7 @@
             "time": ["08:30", "22:00"],
             "roomid": "13488",
             "seatid": ["281"],
-            "daysofweek": ["Sunday", "Saturday"]
+            "daysofweek": ["Friday","Saturday"]
         }
     ]
 }

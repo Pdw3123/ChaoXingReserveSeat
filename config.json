@@ -19,7 +19,7 @@
         {
             "username": "******",
             "password": "******",
-            "time": ["17:00", "22:00"],
+            "time": ["09:00", "22:00"],
             "roomid": "13488",
             "seatid": ["281"],
             "daysofweek": ["Thursday","Friday"]
